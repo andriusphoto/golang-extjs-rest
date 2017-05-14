@@ -9,7 +9,6 @@ import (
 	"github.com/go-ozzo/ozzo-routing/cors"
 	"github.com/go-ozzo/ozzo-routing/fault"
 	"github.com/go-ozzo/ozzo-routing/slash"
-
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
@@ -19,10 +18,14 @@ type jsonReturnArray struct {
 }
 
 func main() {
+
 	router := routing.New()
+	api := router.Group("/api")
+
 	//options := cors.Options{AllowOrigins: "http://dev.mro.flts.local", AllowCredentials: true, AllowHeaders: "*"}
 	router.Use(
 		// all these handlers are shared by every route
+
 		access.Logger(log.Printf),
 		slash.Remover(http.StatusMovedPermanently),
 		fault.Recovery(log.Printf),
@@ -33,10 +36,9 @@ func main() {
 		}),
 	)
 
-	api := router.Group("/api")
 	// api.Options("/<table>", conect, useTable, Get)
-	api.Get("/<table>", conect, useTable, Get)
 
+	api.Get("/<table>", conect, useTable, Get)
 	api.Get("/<table>/<id>", conect, useTable, GetOne)
 	api.Delete("/<table>/<id>", conect, useTable, Delete)
 	api.Post("/<table>", conect, useTable, Create)
