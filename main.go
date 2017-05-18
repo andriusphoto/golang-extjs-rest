@@ -25,7 +25,6 @@ func main() {
 	//options := cors.Options{AllowOrigins: "http://dev.mro.flts.local", AllowCredentials: true, AllowHeaders: "*"}
 	router.Use(
 		// all these handlers are shared by every route
-
 		access.Logger(log.Printf),
 		slash.Remover(http.StatusMovedPermanently),
 		fault.Recovery(log.Printf),
@@ -43,9 +42,9 @@ func main() {
 	api.Delete("/<table>/<id>", conect, useTable, Delete)
 	api.Post("/<table>", conect, useTable, Create)
 	api.Put("/<table>/<id>", conect, useTable, Update)
-	print("Server started... port:7777")
+	print("Server started... port:7776")
 	http.Handle("/", router)
-	http.ListenAndServe(":7777", nil)
+	http.ListenAndServe(":7776", nil)
 
 }
 func conect(c *routing.Context) error {
