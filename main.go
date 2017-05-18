@@ -33,7 +33,8 @@ func main() {
 			AllowMethods: "*",
 		}),
 	)
-	api := router.Group("/api")
+	api := router.Group("/api"
+	
 	// api.Options("/<table>", conect, useTable, Get)
 
 	api.Get("/<table>", conect, useTable, Get)
