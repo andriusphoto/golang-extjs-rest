@@ -20,7 +20,6 @@ type jsonReturnArray struct {
 func main() {
 
 	router := routing.New()
-	api := router.Group("/api")
 
 	//options := cors.Options{AllowOrigins: "http://dev.mro.flts.local", AllowCredentials: true, AllowHeaders: "*"}
 	router.Use(
@@ -34,7 +33,7 @@ func main() {
 			AllowMethods: "*",
 		}),
 	)
-
+	api := router.Group("/api")
 	// api.Options("/<table>", conect, useTable, Get)
 
 	api.Get("/<table>", conect, useTable, Get)
