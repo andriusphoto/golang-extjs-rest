@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
 	routing "github.com/go-ozzo/ozzo-routing"
@@ -10,6 +11,23 @@ import (
 )
 
 func Get(c *routing.Context) error {
+
+	sortstr := c.Request.FormValue("sort")
+	sorter := []sorter{}
+	json.Unmarshal([]byte(sortstr), &sorter)
+	fmt.Println(sorter)
+
+	filterstr := c.Request.FormValue("filter")
+	filter := []filter{}
+	json.Unmarshal([]byte(filterstr), &filter)
+	fmt.Println(filter)
+	page := c.Request.FormValue("page")
+	fmt.Println(page)
+	start := c.Request.FormValue("start")
+	fmt.Println(start)
+	limit := c.Request.FormValue("limit")
+	fmt.Println(limit)
+
 	q := c.Get("q").(r.Term)
 	res, err := q.Run(c.Get("session").(r.QueryExecutor))
 	if err != nil {

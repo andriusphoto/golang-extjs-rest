@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/go-ozzo/ozzo-routing"
-	"github.com/go-ozzo/ozzo-routing/access"
 	"github.com/go-ozzo/ozzo-routing/cors"
 	"github.com/go-ozzo/ozzo-routing/fault"
 	"github.com/go-ozzo/ozzo-routing/slash"
@@ -16,6 +15,15 @@ type jsonReturnArray struct {
 	Data    []interface{} `json:"data"`
 	Success bool          `json:"success"`
 }
+type filter struct {
+	Property string `json:"property"`
+	Value    string `json:"value"`
+	Operator string `json:"operator"`
+}
+type sorter struct {
+	Property  string `json:"property"`
+	Direction string `json:"direction"`
+}
 
 func main() {
 
@@ -24,7 +32,7 @@ func main() {
 	//options := cors.Options{AllowOrigins: "http://dev.mro.flts.local", AllowCredentials: true, AllowHeaders: "*"}
 	router.Use(
 		// all these handlers are shared by every route
-		access.Logger(log.Printf),
+		// access.Logger(log.Printf),
 		slash.Remover(http.StatusMovedPermanently),
 		fault.Recovery(log.Printf),
 		cors.Handler(cors.Options{
@@ -33,8 +41,8 @@ func main() {
 			AllowMethods: "*",
 		}),
 	)
-	api := router.Group("/api"
-	
+	api := router.Group("/api")
+
 	// api.Options("/<table>", conect, useTable, Get)
 
 	api.Get("/<table>", conect, useTable, Get)
