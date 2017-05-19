@@ -12,11 +12,6 @@ import (
 
 func Get(c *routing.Context) error {
 	q := c.Get("q").(r.Term)
-
-	filterstr := c.Request.FormValue("filter")
-	filter := []filter{}
-	json.Unmarshal([]byte(filterstr), &filter)
-	fmt.Println(filter)
 	page := c.Request.FormValue("page")
 	fmt.Println(page)
 	start := c.Request.FormValue("start")

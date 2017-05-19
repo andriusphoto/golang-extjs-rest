@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 
@@ -47,7 +46,7 @@ func main() {
 
 	// api.Options("/<table>", conect, useTable, Get)
 
-	api.Get("/<table>", conect, useTable, addSorter, Get)
+	api.Get("/<table>", conect, useTable, addFilter, addSorter, Get)
 	api.Get("/<table>/<id>", conect, useTable, GetOne)
 	api.Delete("/<table>/<id>", conect, useTable, Delete)
 	api.Post("/<table>", conect, useTable, Create)
@@ -79,12 +78,28 @@ func addSorter(c *routing.Context) error {
 	sortstr := c.Request.FormValue("sort")
 	sorter := []sorter{}
 	json.Unmarshal([]byte(sortstr), &sorter)
-	fmt.Println(sorter)
+
 	for _, item := range sorter {
 		if item.Direction == "ASC" {
 			q = q.OrderBy(item.Property)
 
 		}
+	}
+	c.Set("q", q)
+	return nil
+}
+func addFilter(c *routing.Context) error {
+	q := c.Get("q").(r.Term)
+	filterstr := c.Request.FormValue("filter")
+	filter := []filter{}
+	json.Unmarshal([]byte(filterstr), &filter)
+	for _, item := range filter {
+		if item.Operator == "like" {
+			q = q.Filter(func(el r.Term) r.Term {
+				return el.Field(item.Property).Match(item.Value)
+			})
+		}
+
 	}
 	c.Set("q", q)
 	return nil
