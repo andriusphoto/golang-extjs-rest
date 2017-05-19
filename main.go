@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -45,7 +47,7 @@ func main() {
 
 	// api.Options("/<table>", conect, useTable, Get)
 
-	api.Get("/<table>", conect, useTable, Get)
+	api.Get("/<table>", conect, useTable, addSorter, Get)
 	api.Get("/<table>/<id>", conect, useTable, GetOne)
 	api.Delete("/<table>/<id>", conect, useTable, Delete)
 	api.Post("/<table>", conect, useTable, Create)
@@ -70,5 +72,20 @@ func conect(c *routing.Context) error {
 func useTable(c *routing.Context) error {
 	c.Set("q", r.DB("test").Table(c.Param("table")))
 
+	return nil
+}
+func addSorter(c *routing.Context) error {
+	q := c.Get("q").(r.Term)
+	sortstr := c.Request.FormValue("sort")
+	sorter := []sorter{}
+	json.Unmarshal([]byte(sortstr), &sorter)
+	fmt.Println(sorter)
+	for _, item := range sorter {
+		if item.Direction == "ASC" {
+			q = q.OrderBy(item.Property)
+
+		}
+	}
+	c.Set("q", q)
 	return nil
 }

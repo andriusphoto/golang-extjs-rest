@@ -11,11 +11,7 @@ import (
 )
 
 func Get(c *routing.Context) error {
-
-	sortstr := c.Request.FormValue("sort")
-	sorter := []sorter{}
-	json.Unmarshal([]byte(sortstr), &sorter)
-	fmt.Println(sorter)
+	q := c.Get("q").(r.Term)
 
 	filterstr := c.Request.FormValue("filter")
 	filter := []filter{}
@@ -28,7 +24,6 @@ func Get(c *routing.Context) error {
 	limit := c.Request.FormValue("limit")
 	fmt.Println(limit)
 
-	q := c.Get("q").(r.Term)
 	res, err := q.Run(c.Get("session").(r.QueryExecutor))
 	if err != nil {
 		log.Fatalln(err)
