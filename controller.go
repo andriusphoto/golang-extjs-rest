@@ -12,12 +12,6 @@ import (
 
 func Get(c *routing.Context) error {
 	q := c.Get("q").(r.Term)
-	page := c.Request.FormValue("page")
-	fmt.Println(page)
-	start := c.Request.FormValue("start")
-	fmt.Println(start)
-	limit := c.Request.FormValue("limit")
-	fmt.Println(limit)
 
 	res, err := q.Run(c.Get("session").(r.QueryExecutor))
 	if err != nil {
@@ -27,9 +21,11 @@ func Get(c *routing.Context) error {
 	var rows []interface{}
 	err = res.All(&rows)
 	if err != nil {
-		// error
+		log.Fatalln(err)
 	}
-	ret := jsonReturnArray{rows, true}
+	fmt.Println(c.Get("total"))
+	total := c.Get("total").(int)
+	ret := jsonReturnArray{rows, true, total}
 
 	json, _ := json.Marshal(ret)
 
@@ -48,7 +44,7 @@ func GetOne(c *routing.Context) error {
 	if err != nil {
 		// error
 	}
-	ret := jsonReturnArray{rows, true}
+	ret := jsonReturn{rows, true}
 	json, _ := json.Marshal(ret)
 
 	return c.Write(string(json))
@@ -62,7 +58,7 @@ func Delete(c *routing.Context) error {
 	}
 
 	var rows []interface{}
-	ret := jsonReturnArray{rows, true}
+	ret := jsonReturn{rows, true}
 	json, _ := json.Marshal(ret)
 
 	return c.Write(string(json))
@@ -90,7 +86,7 @@ func Create(c *routing.Context) error {
 	if err3 != nil {
 		// error
 	}
-	ret := jsonReturnArray{rows, true}
+	ret := jsonReturn{rows, true}
 	json, _ := json.Marshal(ret)
 
 	return c.Write(string(json))
@@ -118,7 +114,7 @@ func Update(c *routing.Context) error {
 	if err3 != nil {
 		// error
 	}
-	ret := jsonReturnArray{rows, true}
+	ret := jsonReturn{rows, true}
 	json, _ := json.Marshal(ret)
 
 	return c.Write(string(json))
