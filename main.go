@@ -85,7 +85,7 @@ func UseTable(c *routing.Context) error {
 }
 func Total(c *routing.Context) error {
 	q := c.Get("q").(r.Term)
-	var data interface{}
+	var data int
 	_, err := q.Count(&data).Run(c.Get("session").(r.QueryExecutor))
 	if err != nil {
 		log.Fatalln(err)

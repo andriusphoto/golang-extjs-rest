@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 
 	routing "github.com/go-ozzo/ozzo-routing"
@@ -23,8 +22,9 @@ func Get(c *routing.Context) error {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	fmt.Println(c.Get("total"))
+
 	total := c.Get("total").(int)
+
 	ret := jsonReturnArray{rows, true, total}
 
 	json, _ := json.Marshal(ret)
