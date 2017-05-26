@@ -1,13 +1,17 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/go-ozzo/ozzo-routing"
+	"github.com/go-ozzo/ozzo-routing/auth"
 	"github.com/go-ozzo/ozzo-routing/cors"
 	"github.com/go-ozzo/ozzo-routing/fault"
 	"github.com/go-ozzo/ozzo-routing/slash"
@@ -37,11 +41,8 @@ type sorter struct {
 func main() {
 
 	router := routing.New()
-
-	//options := cors.Options{AllowOrigins: "http://dev.mro.flts.local", AllowCredentials: true, AllowHeaders: "*"}
+	signingKey := "secre-key"
 	router.Use(
-		// all these handlers are shared by every route
-		// access.Logger(log.Printf),
 		slash.Remover(http.StatusMovedPermanently),
 		fault.Recovery(log.Printf),
 		cors.Handler(cors.Options{
@@ -51,11 +52,59 @@ func main() {
 		}),
 		Connect,
 		UseTable,
+		// func(c *routing.Context) error {
+		// 	// id, err := authenticate(c)
+		// 	// if err != nil {
+		// 	// 	return err
+		// 	// }
+		// 	username, password := parseBasicAuth(c.Request.Header.Get("Authorization"))
+		// 	if username == "demo" && password == "foo" {
+		// 		// auth.JWT(signingKey)
+		// 	}
+		// 	token, err := auth.NewJWT(jwt.MapClaims{
+		// 		"id": "10000",
+		// 	}, signingKey)
+		// 	if err != nil {
+
+		// 		return err
+
+		// 	}
+
+		// 	return c.Write(token)
+
+		// },
 	)
 	api := router.Group("/api")
+	api.Post("/login", func(c *routing.Context) error {
+		// id, err := authenticate(c)
+		// if err != nil {
+		// 	return err
+		// }
+		var ret interface{}
+		username, password := parseBasicAuth(c.Request.Header.Get("Authorization"))
+		if username == "demo" && password == "foo" {
+			token, err := auth.NewJWT(jwt.MapClaims{
+				"id": "10000",
+			}, signingKey)
+			if err != nil {
+				return err
+			}
+			ret = jsonReturn{token, true}
+		} else {
+			ret = jsonReturn{nil, false}
+		}
+
+		json, _ := json.Marshal(ret)
+
+		return c.Write(string(json))
+	})
 
 	// api.Options("/<table>", conect, useTable, Get)
 
+	router.Get("/restricted", func(c *routing.Context) error {
+		claims := c.Get("JWT").(*jwt.Token).Claims.(jwt.MapClaims)
+		return c.Write(fmt.Sprint("Welcome, %v!", claims["id"]))
+	})
 	api.Get("/<table>", AddFilter, Total, AddSorter, AddPagination, Get)
 	api.Get("/<table>/<id>", GetOne)
 	api.Delete("/<table>/<id>", Delete)
@@ -151,4 +200,15 @@ func AddFilter(c *routing.Context) error {
 	}
 	c.Set("q", q)
 	return nil
+}
+func parseBasicAuth(auth string) (username, password string) {
+	if strings.HasPrefix(auth, "Basic ") {
+		if bytes, err := base64.StdEncoding.DecodeString(auth[6:]); err == nil {
+			str := string(bytes)
+			if i := strings.IndexByte(str, ':'); i >= 0 {
+				return str[:i], str[i+1:]
+			}
+		}
+	}
+	return
 }
