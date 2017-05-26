@@ -85,12 +85,13 @@ func UseTable(c *routing.Context) error {
 }
 func Total(c *routing.Context) error {
 	q := c.Get("q").(r.Term)
-	var data int
-	_, err := q.Count(&data).Run(c.Get("session").(r.QueryExecutor))
+	var data []interface{}
+	res, err := q.Run(c.Get("session").(r.QueryExecutor))
+	err = res.All(&data)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	c.Set("total", data)
+	c.Set("total", len(data))
 	return nil
 }
 func AddSorter(c *routing.Context) error {
