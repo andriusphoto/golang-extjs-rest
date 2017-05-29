@@ -52,6 +52,7 @@ func main() {
 		}),
 		Connect,
 		UseTable,
+
 		// func(c *routing.Context) error {
 		// 	// id, err := authenticate(c)
 		// 	// if err != nil {
@@ -105,11 +106,11 @@ func main() {
 		claims := c.Get("JWT").(*jwt.Token).Claims.(jwt.MapClaims)
 		return c.Write(fmt.Sprint("Welcome, %v!", claims["id"]))
 	})
-	api.Get("/<table>", AddFilter, Total, AddSorter, AddPagination, Get)
-	api.Get("/<table>/<id>", GetOne)
-	api.Delete("/<table>/<id>", Delete)
-	api.Post("/<table>", Create)
-	api.Put("/<table>/<id>", Update)
+	api.Get("/<table>", auth.JWT(signingKey), AddFilter, Total, AddSorter, AddPagination, Get)
+	api.Get("/<table>/<id>", auth.JWT(signingKey), GetOne)
+	api.Delete("/<table>/<id>", auth.JWT(signingKey), Delete)
+	api.Post("/<table>", auth.JWT(signingKey), Create)
+	api.Put("/<table>/<id>", auth.JWT(signingKey), Update)
 	print("Server started... port:7776")
 	http.Handle("/", router)
 	http.ListenAndServe(":7776", nil)
