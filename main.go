@@ -23,6 +23,8 @@ type jsonReturnArray struct {
 	Success bool          `json:"success"`
 	Length  int           `json:"total"`
 }
+
+
 type jsonReturn struct {
 	Data    interface{} `json:"data"`
 	Success bool        `json:"success"`
