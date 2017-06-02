@@ -97,7 +97,7 @@ func main() {
 	// api.Options("/<table>", conect, useTable, Get)
 
 	api.Get("/restricted", auth.JWT(signingKey), getJWTclaims, restricted)
-	api.Get("/<table>", auth.JWT(signingKey), UseTable, AddFilter, Total, AddSorter, AddPagination, Get)
+	api.Get("/<table>", UseTable, AddFilter, Total, AddSorter, AddPagination, Get)
 	api.Get("/<table>/<id>", auth.JWT(signingKey), UseTable, GetOne)
 	api.Delete("/<table>/<id>", auth.JWT(signingKey), UseTable, Delete)
 	api.Post("/<table>", auth.JWT(signingKey), UseTable, Create)
@@ -168,19 +168,20 @@ func AddSorter(c *routing.Context) error {
 func AddPagination(c *routing.Context) error {
 	q := c.Get("q").(r.Term)
 	page, err := strconv.Atoi(c.Request.FormValue("page"))
+
 	if err != nil {
 
-		log.Fatalln(err)
+		return nil
 	}
 	start, err := strconv.Atoi(c.Request.FormValue("start"))
 	if err != nil {
 
-		log.Fatalln(err)
+		return nil
 	}
 	limit, err := strconv.Atoi(c.Request.FormValue("limit"))
 	if err != nil {
 
-		log.Fatalln(err)
+		return nil
 	}
 	fmt.Println(limit)
 	sortstr := c.Request.FormValue("sort")
