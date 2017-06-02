@@ -9,6 +9,15 @@ import (
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
+func restricted(c *routing.Context) error {
+
+	claims := c.Get("claims")
+	ret := jsonReturn{claims, true}
+	json, _ := json.Marshal(ret)
+
+	return c.Write(string(json))
+
+}
 func Get(c *routing.Context) error {
 	q := c.Get("q").(r.Term)
 

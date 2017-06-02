@@ -18,28 +18,6 @@ import (
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
-type jsonReturnArray struct {
-	Data    []interface{} `json:"data"`
-	Success bool          `json:"success"`
-	Length  int           `json:"total"`
-}
-
-
-type jsonReturn struct {
-	Data    interface{} `json:"data"`
-	Success bool        `json:"success"`
-}
-
-type filter struct {
-	Property string `json:"property"`
-	Value    string `json:"value"`
-	Operator string `json:"operator"`
-}
-type sorter struct {
-	Property  string `json:"property"`
-	Direction string `json:"direction"`
-}
-
 func main() {
 
 	router := routing.New()
@@ -53,8 +31,7 @@ func main() {
 			AllowMethods: "*",
 		}),
 		Connect,
-		UseTable,
-
+		UseDB,
 		// func(c *routing.Context) error {
 		// 	// id, err := authenticate(c)
 		// 	// if err != nil {
@@ -85,12 +62,27 @@ func main() {
 		// }
 		var ret interface{}
 		username, password := parseBasicAuth(c.Request.Header.Get("Authorization"))
-		if username == "demo" && password == "foo" {
+		q := c.Get("q").(r.Term)
+
+		res, err := q.Table("users").Filter(map[string]interface{}{
+			"username": username,
+			"password": password,
+		}).Run(c.Get("session").(r.QueryExecutor))
+		if err != nil {
+			fmt.Print(err)
+
+			return nil
+		}
+		var users []map[string]interface{}
+		err = res.All(&users)
+		if len(users) > 0 {
 			token, err := auth.NewJWT(jwt.MapClaims{
-				"id": "10000",
+				"username": users[0]["username"],
 			}, signingKey)
 			if err != nil {
-				return err
+				fmt.Print(err)
+
+				return nil
 			}
 			ret = jsonReturn{token, true}
 		} else {
@@ -104,20 +96,25 @@ func main() {
 
 	// api.Options("/<table>", conect, useTable, Get)
 
-	router.Get("/restricted", func(c *routing.Context) error {
-		claims := c.Get("JWT").(*jwt.Token).Claims.(jwt.MapClaims)
-		return c.Write(fmt.Sprint("Welcome, %v!", claims["id"]))
-	})
-	api.Get("/<table>", auth.JWT(signingKey), AddFilter, Total, AddSorter, AddPagination, Get)
-	api.Get("/<table>/<id>", auth.JWT(signingKey), GetOne)
-	api.Delete("/<table>/<id>", auth.JWT(signingKey), Delete)
-	api.Post("/<table>", auth.JWT(signingKey), Create)
-	api.Put("/<table>/<id>", auth.JWT(signingKey), Update)
+	api.Get("/restricted", auth.JWT(signingKey), getJWTclaims, restricted)
+	api.Get("/<table>", auth.JWT(signingKey), UseTable, AddFilter, Total, AddSorter, AddPagination, Get)
+	api.Get("/<table>/<id>", auth.JWT(signingKey), UseTable, GetOne)
+	api.Delete("/<table>/<id>", auth.JWT(signingKey), UseTable, Delete)
+	api.Post("/<table>", auth.JWT(signingKey), UseTable, Create)
+	api.Put("/<table>/<id>", auth.JWT(signingKey), UseTable, Update)
 	print("Server started... port:7776")
 	http.Handle("/", router)
 	http.ListenAndServe(":7776", nil)
 
 }
+func getJWTclaims(c *routing.Context) error {
+	claims := c.Get("JWT").(*jwt.Token).Claims.(jwt.MapClaims)
+
+	c.Set("claims", claims)
+	return nil
+
+}
+
 func Connect(c *routing.Context) error {
 
 	session, err := r.Connect(r.ConnectOpts{
@@ -130,8 +127,15 @@ func Connect(c *routing.Context) error {
 	}
 	return nil
 }
+func UseDB(c *routing.Context) error {
+
+	c.Set("q", r.DB("test"))
+
+	return nil
+}
 func UseTable(c *routing.Context) error {
-	c.Set("q", r.DB("test").Table(c.Param("table")))
+	q := c.Get("q").(r.Term)
+	c.Set("q", q.Table(c.Param("table")))
 
 	return nil
 }
