@@ -1,18 +1,29 @@
-package main
+package controllers
 
 import (
+	config "api/config"
+	lib "api/lib"
 	"encoding/json"
 	"log"
 
-	routing "github.com/go-ozzo/ozzo-routing"
-
+	"github.com/go-ozzo/ozzo-routing"
+	"github.com/go-ozzo/ozzo-routing/auth"
 	r "gopkg.in/gorethink/gorethink.v3"
 )
 
+func ImportRoutes(api routing.RouteGroup) {
+
+	api.Get("/restricted", auth.JWT(config.SigningKey), lib.GetJWTclaims, restricted)
+	api.Get("/<table>", lib.UseTable, lib.AddFilter, lib.Total, lib.AddSorter, lib.AddPagination, Get)
+	api.Get("/<table>/<id>", auth.JWT(config.SigningKey), lib.UseTable, GetOne)
+	api.Delete("/<table>/<id>", auth.JWT(config.SigningKey), lib.UseTable, Delete)
+	api.Post("/<table>", auth.JWT(config.SigningKey), lib.UseTable, Create)
+	api.Put("/<table>/<id>", auth.JWT(config.SigningKey), lib.UseTable, Update)
+}
 func restricted(c *routing.Context) error {
 
 	claims := c.Get("claims")
-	ret := jsonReturn{claims, true}
+	ret := lib.JsonReturn{claims, true}
 	json, _ := json.Marshal(ret)
 
 	return c.Write(string(json))
@@ -34,7 +45,7 @@ func Get(c *routing.Context) error {
 
 	total := c.Get("total").(int)
 
-	ret := jsonReturnArray{rows, true, total}
+	ret := lib.JsonReturnArray{rows, true, total}
 
 	json, _ := json.Marshal(ret)
 
@@ -53,7 +64,7 @@ func GetOne(c *routing.Context) error {
 	if err != nil {
 		// error
 	}
-	ret := jsonReturn{rows, true}
+	ret := lib.JsonReturn{rows, true}
 	json, _ := json.Marshal(ret)
 
 	return c.Write(string(json))
@@ -67,7 +78,7 @@ func Delete(c *routing.Context) error {
 	}
 
 	var rows []interface{}
-	ret := jsonReturn{rows, true}
+	ret := lib.JsonReturn{rows, true}
 	json, _ := json.Marshal(ret)
 
 	return c.Write(string(json))
@@ -95,7 +106,7 @@ func Create(c *routing.Context) error {
 	if err3 != nil {
 		// error
 	}
-	ret := jsonReturn{rows, true}
+	ret := lib.JsonReturn{rows, true}
 	json, _ := json.Marshal(ret)
 
 	return c.Write(string(json))
@@ -123,7 +134,7 @@ func Update(c *routing.Context) error {
 	if err3 != nil {
 		// error
 	}
-	ret := jsonReturn{rows, true}
+	ret := lib.JsonReturn{rows, true}
 	json, _ := json.Marshal(ret)
 
 	return c.Write(string(json))
